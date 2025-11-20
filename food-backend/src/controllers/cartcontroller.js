@@ -1,32 +1,34 @@
+// controllers/cartController.js
 import Cart from "../models/cart.js";
 
-// Get cart
+// GET cart by user
 export const getCart = async (req, res) => {
   try {
     const cart = await Cart.findOne({ userId: req.params.userId });
-    res.json(cart || { items: [] });
+    res.json({ items: cart ? cart.items : [] });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Update cart (sync)
+// PUT to update or create cart
 export const updateCart = async (req, res) => {
   const { userId, items } = req.body;
   try {
     let cart = await Cart.findOne({ userId });
-
-    if (cart) cart.items = items;
-    else cart = new Cart({ userId, items });
-
+    if (cart) {
+      cart.items = items;
+    } else {
+      cart = new Cart({ userId, items });
+    }
     await cart.save();
-    res.json(cart);
+    res.json({ items: cart.items });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// Clear cart
+// DELETE cart
 export const deleteCart = async (req, res) => {
   try {
     await Cart.findOneAndDelete({ userId: req.params.userId });
@@ -34,4 +36,4 @@ export const deleteCart = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-};
+}; 

@@ -1,72 +1,82 @@
-import { createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
+// src/components/Slice/CartSlice.js
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-const initialState = {
-  items: [], // Cart items
-};
+// API helper
+async function api(url, method = "GET", body) {
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error("API Error");
+  return res.json().catch(() => ({}));
+}
+
+// ---------- 1. LOAD CART ----------
+export const fetchCart = createAsyncThunk("cart/fetchCart", async (userId) => {
+  if (!userId) return [];
+  const data = await api(`http://localhost:5000/api/cart/${userId}`);
+  return data.items || [];
+});
+
+// ---------- 2. UPDATE SERVER ----------
+export const syncCart = createAsyncThunk(
+  "cart/syncCart",
+  async ({ userId, items }) => {
+    if (!userId) return items;
+    const data = await api("http://localhost:5000/api/cart", "PUT", {
+      userId,
+      items,
+    });
+    return data.items;
+  }
+);
 
 const CartSlice = createSlice({
   name: "cart",
-  initialState,
+  initialState: { items: [], loading: false, error: null },
+
   reducers: {
-    // Set cart items from backend
-    setCart: (state, action) => {
-      state.items = action.payload || [];
-    },
+    // LOCAL ADD
+    addItem: (state, action) => {
+      const item = action.payload;
+      const exist = state.items.find((i) => i._id === item._id);
 
-    // Add item locally
-    addToCartLocal: (state, action) => {
-      const { item } = action.payload;
-      const existing = state.items.find((i) => i._id === item._id);
-
-      if (existing) existing.quantity += 1;
+      if (exist) exist.quantity++;
       else state.items.push({ ...item, quantity: 1 });
     },
 
-    // Decrease quantity locally
-    decreaseQuantityLocal: (state, action) => {
+    // LOCAL DECREASE
+    decreaseItem: (state, action) => {
       const id = action.payload;
       const item = state.items.find((i) => i._id === id);
 
-      if (item) {
-        if (item.quantity > 1) item.quantity -= 1;
-        else state.items = state.items.filter((i) => i._id !== id);
-      }
+      if (!item) return;
+      if (item.quantity > 1) item.quantity--;
+      else state.items = state.items.filter((i) => i._id !== id);
     },
 
-    // Remove item completely
-    removeFromCartLocal: (state, action) => {
-      const id = action.payload;
-      state.items = state.items.filter((i) => i._id !== id);
+    // LOCAL REMOVE
+    removeItem: (state, action) => {
+      state.items = state.items.filter((i) => i._id !== action.payload);
     },
 
-    // Clear cart locally
-    clearCartLocal: (state) => {
+    clearCart: (state) => {
       state.items = [];
     },
   },
+
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchCart.fulfilled, (state, action) => {
+        state.items = action.payload || [];
+      })
+      .addCase(syncCart.fulfilled, (state, action) => {
+        state.items = action.payload || [];
+      });
+  },
 });
 
-// Export actions
-export const {
-  setCart,
-  addToCartLocal,
-  decreaseQuantityLocal,
-  removeFromCartLocal,
-  clearCartLocal,
-} = CartSlice.actions;
-
-// Export reducer
+export const { addItem, decreaseItem, removeItem, clearCart } =
+  CartSlice.actions;
 export default CartSlice.reducer;
-
-/* ------------------------
-   ASYNC THUNK — Backend Sync
------------------------- */
-export const syncCartWithBackend = (userId, items) => async () => {
-  if (!userId) return;
-  try {
-    await axios.put("/api/cart", { userId, items });
-  } catch (err) {
-    console.error("Cart sync error:", err);
-  }
-};

@@ -1,3 +1,4 @@
+// src/components/FoodDisplay/FoodDisplay.jsx (check)
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchFoods } from "../Slice/StoreSlice";
@@ -11,14 +12,11 @@ const FoodDisplay = ({ category, user }) => {
     dispatch(fetchFoods());
   }, [dispatch]);
 
-  if (loading)
-    return <p className="text-center text-lg">Loading foods...</p>;
+  if (loading) return <p className="text-center text-lg">Loading foods...</p>;
 
   return (
     <div id="food-display" className="py-12 px-4">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        Top dishes near you
-      </h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">Top dishes near you</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {foods
@@ -30,7 +28,7 @@ const FoodDisplay = ({ category, user }) => {
               name={food.name}
               price={food.price}
               description={food.description}
-              image={`http://localhost:5000${food.image}`} // 🔥 Important fix!
+              image={`http://localhost:5000${food.image}`}
               user={user}
             />
           ))}
