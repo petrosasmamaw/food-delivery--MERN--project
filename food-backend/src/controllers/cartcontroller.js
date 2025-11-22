@@ -11,24 +11,29 @@ export const getCart = async (req, res) => {
   }
 };
 
-// PUT to update or create cart
+// PUT update cart
 export const updateCart = async (req, res) => {
-  const { userId, items } = req.body;
+  const { userId } = req.params;   // <-- A: userId from params
+  const { items } = req.body;
+
   try {
     let cart = await Cart.findOne({ userId });
+
     if (cart) {
       cart.items = items;
     } else {
       cart = new Cart({ userId, items });
     }
+
     await cart.save();
     res.json({ items: cart.items });
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// DELETE cart
+// DELETE cart (clear)
 export const deleteCart = async (req, res) => {
   try {
     await Cart.findOneAndDelete({ userId: req.params.userId });
@@ -36,4 +41,4 @@ export const deleteCart = async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-}; 
+};
