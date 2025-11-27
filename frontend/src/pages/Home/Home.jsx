@@ -13,7 +13,6 @@ const Home = ({ user }) => {
       <Header />
       <ExploreMenu category={category} setCategory={setCategory} />
       <FoodDisplay category={category} user={user} /> {/* <-- pass user */}
-      <FoodCreate />
       <AppDownloads />
     </div>
   );

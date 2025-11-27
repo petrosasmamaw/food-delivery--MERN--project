@@ -42,7 +42,7 @@ export const createFood = async (req, res) => {
       price,
       description,
       category,
-      image: req.file ? `/images/${req.file.filename}` : null
+      image: req.file ? `/uploads/${req.file.filename}` : null
     });
 
     await newFood.save();
